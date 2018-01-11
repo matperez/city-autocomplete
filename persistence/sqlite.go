@@ -52,17 +52,20 @@ func (s sqliteStore) Populate(items []string) error {
 	}
 	_, err = s.db.Exec("delete from city")
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
 	stmt, err := tx.Prepare("insert into city(name) values(?)")
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	defer stmt.Close()
 	for _, item := range items {
 		_, err = stmt.Exec(item)
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}
