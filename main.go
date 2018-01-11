@@ -21,7 +21,7 @@ func main() {
 	http.Handle(
 		"/query",
 		httptransport.NewServer(
-			makeUppercaseEndpoint(svc),
+			makeQueryEndpoint(svc),
 			decodeQueryRequest,
 			encodeResponse,
 		),
@@ -45,11 +45,10 @@ type queryResponse struct {
 
 // функция для парсинга запроса
 func decodeQueryRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var request queryRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
-	}
-	return request, nil
+	var query, serviceType string
+	query = r.URL.Query().Get("query")
+	serviceType = r.URL.Query().Get("type")
+	return queryRequest{query, serviceType}, nil
 }
 
 // функция для кодирования ответа
@@ -58,7 +57,7 @@ func encodeResponse(_ context.Context, w http.ResponseWriter, response interface
 }
 
 // обработчик запроса на получение списка городов
-func makeUppercaseEndpoint(svc Service) endpoint.Endpoint {
+func makeQueryEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(queryRequest)
 		v, err := svc.Query(req.Q, req.T)
