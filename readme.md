@@ -20,11 +20,5 @@ go build
 Запрос
 
 ```sh
-curl --request GET \
-  --url http://localhost:8080/query \
-  --header 'content-type: application/json' \
-  --data '{
-    "query": "a",
-    "type": "c"
-}'
+curl --request GET --url 'http://localhost:8080/query?query=a'
 ```
