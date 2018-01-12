@@ -5,19 +5,38 @@ import (
 )
 
 // реализация интерфейса через SQLite
-type sqliteStore struct {
+type sqlStore struct {
 	db *sql.DB
 }
 
-// NewSQLiteStore фабрика нового хранилища
-func NewSQLiteStore(db *sql.DB) Store {
-	return &sqliteStore{db}
+// NewSQLStore фабрика нового хранилища
+func NewSQLStore(db *sql.DB) (Store, error) {
+	store := &sqlStore{db}
+	if err := store.init(); err != nil {
+		return store, err
+	}
+	return store, nil
+}
+
+// Init инициализация хранилища
+func (s sqlStore) init() error {
+	sqlStmt := `
+	create table city (
+		name text
+	);
+	delete from city;
+	`
+	_, err := s.db.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Query запросить список удовлетворяющий условиям поиска
 // query - строка поиска
 // serviceType - тип услуги
-func (s sqliteStore) Query(query string) ([]string, error) {
+func (s sqlStore) Query(query string) ([]string, error) {
 	stmt, err := s.db.Prepare("select name from city where name like ?")
 	if err != nil {
 		return []string{}, err
@@ -45,7 +64,7 @@ func (s sqliteStore) Query(query string) ([]string, error) {
 }
 
 // Populate очистить базу данных и заполнить ее заново переданными значениями
-func (s sqliteStore) Populate(items []string) error {
+func (s sqlStore) Populate(items []string) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err

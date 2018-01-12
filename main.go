@@ -15,21 +15,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// создание таблицы для хранения данных
-func ensureDB(db *sql.DB) error {
-	sqlStmt := `
-	create table city (
-		name text
-	);
-	delete from city;
-	`
-	_, err := db.Exec(sqlStmt)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func main() {
 	logger := log.NewJSONLogger(os.Stderr)
 
@@ -40,15 +25,14 @@ func main() {
 		logger.Log(err)
 		os.Exit(1)
 	}
+
 	defer db.Close()
 
-	err = ensureDB(db)
+	store, err := persistence.NewSQLStore(db)
 	if err != nil {
 		logger.Log(err)
 		os.Exit(1)
 	}
-
-	store := persistence.NewSQLiteStore(db)
 	store.Populate([]string{"a", "b"})
 
 	var svc Service
