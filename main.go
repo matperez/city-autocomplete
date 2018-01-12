@@ -33,7 +33,9 @@ func main() {
 		logger.Log(err)
 		os.Exit(1)
 	}
-	store.Populate([]string{"a", "b"})
+
+	// @todo получать начальные значения из стороннего источника
+	store.Populate([]string{"a", "b", "aa", "ab"})
 
 	var svc Service
 	svc = New(store)

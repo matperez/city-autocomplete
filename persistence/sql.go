@@ -42,7 +42,7 @@ func (s sqlStore) Query(query string) ([]string, error) {
 		return []string{}, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(query)
+	rows, err := stmt.Query("%" + query + "%")
 	if err != nil {
 		return []string{}, err
 	}
