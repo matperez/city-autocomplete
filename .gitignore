@@ -1,3 +1,4 @@
 vendor/
 city-autocomplete
 sqlite-example/
+db.sqlite

@@ -23,12 +23,12 @@ func (s sqliteStore) Query(query string) ([]string, error) {
 		return []string{}, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query()
+	rows, err := stmt.Query(query)
 	if err != nil {
 		return []string{}, err
 	}
 	defer rows.Close()
-	var items []string
+	items := []string{}
 	for rows.Next() {
 		var name string
 		err = rows.Scan(&name)

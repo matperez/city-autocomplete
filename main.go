@@ -18,12 +18,10 @@ import (
 // создание таблицы для хранения данных
 func ensureDB(db *sql.DB) error {
 	sqlStmt := `
-	create table foo (
-		id integer not null primary key,
-		name text,
-		popularity integer not null default 0
+	create table city (
+		name text
 	);
-	delete from foo;
+	delete from city;
 	`
 	_, err := db.Exec(sqlStmt)
 	if err != nil {
@@ -35,16 +33,23 @@ func ensureDB(db *sql.DB) error {
 func main() {
 	logger := log.NewJSONLogger(os.Stderr)
 
-	os.Remove("./foo.db")
+	os.Remove("./db.sqlite")
 
-	db, err := sql.Open("sqlite3", "./foo.db")
+	db, err := sql.Open("sqlite3", "./db.sqlite")
 	if err != nil {
 		logger.Log(err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
+	err = ensureDB(db)
+	if err != nil {
+		logger.Log(err)
+		os.Exit(1)
+	}
+
 	store := persistence.NewSQLiteStore(db)
+	store.Populate([]string{"a", "b"})
 
 	var svc Service
 	svc = New(store)
