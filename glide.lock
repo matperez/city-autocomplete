@@ -1,5 +1,5 @@
 hash: 34cb91d885896158405209dca6641631c427f042ba65f2d39e5077f0f9868d44
-updated: 2018-01-11T15:09:11.529251117+05:00
+updated: 2018-01-12T16:56:25.037995517+05:00
 imports:
 - name: github.com/go-kit/kit
   version: 4dc7be5d2d12881735283bcab7352178e190fc71
@@ -13,4 +13,6 @@ imports:
   version: 259ab82a6cad3992b4e21ff5cac294ccb06474bc
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
+- name: github.com/mattn/go-sqlite3
+  version: 6c771bb9887719704b210e87e934f08be014bdb1
 testImports: []
