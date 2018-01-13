@@ -21,7 +21,7 @@ func (mw loggingMiddleware) Query(query string, serviceType string) (output []da
 			"output": output,
 			"err":    err,
 			"took":   time.Since(begin),
-		}).Info("Query")
+		}).Debug("Query")
 	}(time.Now())
 
 	output, err = mw.next.Query(query, serviceType)

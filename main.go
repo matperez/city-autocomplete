@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&logLevel, "logLevel", "warning", "Log level: warning, info, error, fatal")
+	flag.StringVar(&logLevel, "logLevel", "info", "Log level: warning, info, error, fatal")
 	flag.StringVar(&logFormat, "logFormat", "text", "Log format: text, json")
 	flag.Parse()
 	if flag.NArg() == 0 {
@@ -38,7 +38,7 @@ func init() {
 
 // наполнение базы данными с випзала
 func populateDatabase(store persistence.Store) error {
-	log.Warn("Populating the database")
+	log.Info("Populating the database")
 
 	vipzal := data.NewVipzalSource(baseURL)
 	cities, err := vipzal.GetCities()
@@ -50,7 +50,7 @@ func populateDatabase(store persistence.Store) error {
 		return err
 	}
 
-	log.Warn("Database populated")
+	log.Info("Database populated")
 	return nil
 }
 
@@ -97,9 +97,7 @@ func main() {
 		responseString,
 	))
 
-	log.WithFields(log.Fields{
-		"addr": ":8080",
-	}).Warn("Listening")
+	log.Info("Listening on :8080")
 
 	log.Error(http.ListenAndServe(":8080", nil))
 }

@@ -32,9 +32,7 @@ func fetchJSON(url string, target interface{}) error {
 func (c client) GetCities() ([]City, error) {
 	target := new([]City)
 
-	log.WithFields(log.Fields{
-		"baseUrl": c.baseURL,
-	}).Warn("Fetching cities")
+	log.Debug("Fetching cities from " + c.baseURL)
 
 	err := fetchJSON(c.baseURL+"/white-label/city/scored", target)
 
