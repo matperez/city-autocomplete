@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"strings"
 
+	"github.com/essentialkaos/translit"
+
 	"github.com/go-kit/kit/log"
 	"github.com/matperez/city-autocomplete/data"
 )
@@ -35,7 +37,8 @@ func (s sqlStore) init() error {
 		total_score integer,
 		arrival_score integer,
 		departure_score integer,
-		transit_score integer
+		transit_score integer,
+		autocomplete string
 	);
 	delete from city;
 	`
@@ -52,20 +55,20 @@ func (s sqlStore) init() error {
 // query - строка поиска
 // serviceType - тип услуги
 func (s sqlStore) Query(query string) ([]data.City, error) {
+	items := []data.City{}
 	if query == "" {
-		return []data.City{}, nil
+		return items, nil
 	}
-	stmt, err := s.db.Prepare("select name, code, country_name, country_code, total_score, arrival_score, departure_score, transit_score from city where lower(name) like ? ORDER BY total_score DESC limit 10")
+	stmt, err := s.db.Prepare("select name, code, country_name, country_code, total_score, arrival_score, departure_score, transit_score from city where autocomplete like ? ORDER BY total_score DESC limit 10")
 	if err != nil {
-		return []data.City{}, err
+		return items, err
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query("%" + strings.ToLower(query) + "%")
 	if err != nil {
-		return []data.City{}, err
+		return items, err
 	}
 	defer rows.Close()
-	items := []data.City{}
 	for rows.Next() {
 		var item data.City
 		err = rows.Scan(&item.Name, &item.Code, &item.CountryName, &item.CountryCode, &item.TotalScore, &item.ArrivalScore, &item.DepartureScore, &item.TransitScore)
@@ -102,9 +105,10 @@ func (s sqlStore) Populate(items []data.City) error {
 		total_score,
 		arrival_score,
 		departure_score,
-		transit_score
+		transit_score,
+		autocomplete
 	)
-	values(?, ?, ?, ?, ?, ?, ?, ?)
+	values(?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	stmt, err := tx.Prepare(sqlStmt)
 	if err != nil {
@@ -122,6 +126,7 @@ func (s sqlStore) Populate(items []data.City) error {
 			item.ArrivalScore,
 			item.DepartureScore,
 			item.TransitScore,
+			autocomplete(item),
 		)
 		if err != nil {
 			tx.Rollback()
@@ -130,4 +135,13 @@ func (s sqlStore) Populate(items []data.City) error {
 	}
 	tx.Commit()
 	return nil
+}
+
+// подготавливает строку по которой будет выполняться поиск
+func autocomplete(c data.City) string {
+	return strings.ToLower(strings.Join([]string{
+		c.Name,
+		c.Code,
+		translit.EncodeToISO9B(c.Name),
+	}, " "))
 }
