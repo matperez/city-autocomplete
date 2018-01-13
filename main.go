@@ -85,7 +85,7 @@ func main() {
 		func(ctx context.Context, request interface{}) (interface{}, error) {
 			log.Warn("Database repopulation requested")
 			if err := populateDatabase(store); err != nil {
-				return "failed", err
+				return nil, err
 			}
 			return "ok", nil
 		},
