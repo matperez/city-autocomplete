@@ -41,15 +41,13 @@ func main() {
 
 	db, err := sql.Open("sqlite3", "./db.sqlite")
 	if err != nil {
-		logger.Log("err", err)
-		os.Exit(1)
+		panic(err.Error())
 	}
 	defer db.Close()
 
 	store, err := persistence.NewSQLStore(db, logger)
 	if err != nil {
-		logger.Log("err", err)
-		os.Exit(1)
+		panic(err.Error())
 	}
 
 	logger.Log("event", "Populating the database")
@@ -57,13 +55,11 @@ func main() {
 	vipzal := data.NewVipzalSource(baseURL, logger)
 	cities, err := vipzal.GetCities()
 	if err != nil {
-		logger.Log("err", err)
-		os.Exit(1)
+		panic(err.Error())
 	}
 
 	if err = store.Populate(cities); err != nil {
-		logger.Log("err", err)
-		os.Exit(1)
+		panic(err.Error())
 	}
 
 	logger.Log("event", "Database populated")
