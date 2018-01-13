@@ -1,4 +1,4 @@
-package vipzal
+package data
 
 import (
 	"encoding/json"
@@ -8,18 +8,13 @@ import (
 	"github.com/go-kit/kit/log"
 )
 
-// Client клиент vip-zal.ru
-type Client interface {
-	FetchCities() ([]string, error)
-}
-
 type client struct {
 	baseURL string
 	logger  log.Logger
 }
 
-// New фабричный метод
-func New(baseURL string, logger log.Logger) Client {
+// NewVipzalSource фабричный метод
+func NewVipzalSource(baseURL string, logger log.Logger) Source {
 	return &client{baseURL, logger}
 }
 
@@ -47,7 +42,7 @@ type city struct {
 type response []city
 
 // Получение списка городов
-func (c client) FetchCities() ([]string, error) {
+func (c client) GetCities() ([]string, error) {
 	target := new(response)
 
 	c.logger.Log("event", "Fetching cities", "baseUrl", c.baseURL)

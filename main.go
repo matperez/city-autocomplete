@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/matperez/city-autocomplete/data"
 	"github.com/matperez/city-autocomplete/persistence"
-	"github.com/matperez/city-autocomplete/vipzal"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -54,8 +54,8 @@ func main() {
 
 	logger.Log("event", "Populating the database")
 
-	vipzal := vipzal.New(baseURL, logger)
-	cities, err := vipzal.FetchCities()
+	vipzal := data.NewVipzalSource(baseURL, logger)
+	cities, err := vipzal.GetCities()
 	if err != nil {
 		logger.Log("err", err)
 		os.Exit(1)
