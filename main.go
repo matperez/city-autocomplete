@@ -19,12 +19,14 @@ import (
 )
 
 var (
-	baseURL  string
-	logLevel string
+	baseURL   string
+	logLevel  string
+	logFormat string
 )
 
 func init() {
-	flag.StringVar(&logLevel, "logLevel", "info", "Log level: warning, info, error, fatal")
+	flag.StringVar(&logLevel, "logLevel", "warning", "Log level: warning, info, error, fatal")
+	flag.StringVar(&logFormat, "logFormat", "text", "Log format: text, json")
 	flag.Parse()
 	if flag.NArg() == 0 {
 		printUsage()
@@ -106,7 +108,15 @@ func main() {
 func setupLogger() {
 	// Only log the warning severity or above.
 	// Log as JSON instead of the default ASCII formatter.
-	log.SetFormatter(&log.JSONFormatter{})
+	if logFormat == "json" {
+		log.SetFormatter(&log.JSONFormatter{})
+	} else if logFormat == "text" {
+		log.SetFormatter(&log.TextFormatter{})
+	} else {
+		fmt.Println("Uknown log format: " + logFormat)
+		printUsage()
+		os.Exit(1)
+	}
 	// Output to stdout instead of the default stderr
 	// Can be any io.Writer, see below for File example
 	log.SetOutput(os.Stdout)
