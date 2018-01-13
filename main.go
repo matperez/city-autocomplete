@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/matperez/city-autocomplete/persistence"
+	"github.com/matperez/city-autocomplete/vipzal"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -15,27 +18,54 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var (
+	baseURL string
+)
+
+func init() {
+	flag.Parse()
+	if flag.NArg() == 0 {
+		fmt.Printf("Usage: %s [OPTIONS] <base-url>\n", os.Args[0])
+		fmt.Println("Options available:")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+	baseURL = flag.Arg(0)
+}
+
 func main() {
 	logger := log.NewJSONLogger(os.Stderr)
+	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 
 	os.Remove("./db.sqlite")
 
 	db, err := sql.Open("sqlite3", "./db.sqlite")
 	if err != nil {
-		logger.Log(err)
+		logger.Log("err", err)
 		os.Exit(1)
 	}
-
 	defer db.Close()
 
-	store, err := persistence.NewSQLStore(db)
+	store, err := persistence.NewSQLStore(db, logger)
 	if err != nil {
-		logger.Log(err)
+		logger.Log("err", err)
 		os.Exit(1)
 	}
 
 	// @todo получать начальные значения из стороннего источника
-	store.Populate([]string{"a", "b", "aa", "ab"})
+	logger.Log("event", "Populating the database")
+	vipzal := vipzal.New(baseURL, logger)
+	cities, err := vipzal.FetchCities()
+	if err != nil {
+		logger.Log("err", err)
+		os.Exit(1)
+	}
+
+	if err = store.Populate(cities); err != nil {
+		logger.Log("err", err)
+		os.Exit(1)
+	}
+	logger.Log("event", "Database populated")
 
 	var svc Service
 	svc = New(store)
@@ -50,7 +80,7 @@ func main() {
 		),
 	)
 
-	logger.Log("msg", "HTTP", "addr", ":8080")
+	logger.Log("event", "Listening", "proto", "HTTP", "addr", ":8080")
 	logger.Log("err", http.ListenAndServe(":8080", nil))
 }
 

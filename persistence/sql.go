@@ -2,16 +2,19 @@ package persistence
 
 import (
 	"database/sql"
+
+	"github.com/go-kit/kit/log"
 )
 
 // реализация интерфейса через SQLite
 type sqlStore struct {
-	db *sql.DB
+	db     *sql.DB
+	logger log.Logger
 }
 
 // NewSQLStore фабрика нового хранилища
-func NewSQLStore(db *sql.DB) (Store, error) {
-	store := &sqlStore{db}
+func NewSQLStore(db *sql.DB, logger log.Logger) (Store, error) {
+	store := &sqlStore{db, logger}
 	if err := store.init(); err != nil {
 		return store, err
 	}
@@ -20,6 +23,7 @@ func NewSQLStore(db *sql.DB) (Store, error) {
 
 // Init инициализация хранилища
 func (s sqlStore) init() error {
+	s.logger.Log("event", "Initializing the database")
 	sqlStmt := `
 	create table city (
 		name text
@@ -28,8 +32,10 @@ func (s sqlStore) init() error {
 	`
 	_, err := s.db.Exec(sqlStmt)
 	if err != nil {
+		s.logger.Log("err", "Initialization failed")
 		return err
 	}
+	s.logger.Log("event", "Database initialized")
 	return nil
 }
 
