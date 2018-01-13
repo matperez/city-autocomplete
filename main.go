@@ -52,8 +52,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// @todo получать начальные значения из стороннего источника
 	logger.Log("event", "Populating the database")
+
 	vipzal := vipzal.New(baseURL, logger)
 	cities, err := vipzal.FetchCities()
 	if err != nil {
@@ -65,6 +65,7 @@ func main() {
 		logger.Log("err", err)
 		os.Exit(1)
 	}
+
 	logger.Log("event", "Database populated")
 
 	var svc Service

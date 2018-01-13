@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/go-kit/kit/log"
 )
@@ -43,12 +44,15 @@ func (s sqlStore) init() error {
 // query - строка поиска
 // serviceType - тип услуги
 func (s sqlStore) Query(query string) ([]string, error) {
-	stmt, err := s.db.Prepare("select name from city where name like ?")
+	if query == "" {
+		return []string{}, nil
+	}
+	stmt, err := s.db.Prepare("select name from city where lower(name) like ? limit 10")
 	if err != nil {
 		return []string{}, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query("%" + query + "%")
+	rows, err := stmt.Query("%" + strings.ToLower(query) + "%")
 	if err != nil {
 		return []string{}, err
 	}
