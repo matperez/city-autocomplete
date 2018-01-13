@@ -1,7 +1,9 @@
 package persistence
 
+import "github.com/matperez/city-autocomplete/data"
+
 // Store интерфейс хранилища данных
 type Store interface {
-	Populate([]string) error
-	Query(string) ([]string, error)
+	Populate([]data.City) error
+	Query(string) ([]data.City, error)
 }

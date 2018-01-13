@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-kit/kit/log"
+	"github.com/matperez/city-autocomplete/data"
 )
 
 // реализация интерфейса через SQLite
@@ -27,7 +28,14 @@ func (s sqlStore) init() error {
 	s.logger.Log("event", "Initializing the database")
 	sqlStmt := `
 	create table city (
-		name text
+		name text,
+		code text,
+		country_name text,
+		country_code text,
+		total_score integer,
+		arrival_score integer,
+		departure_score integer,
+		transit_score integer
 	);
 	delete from city;
 	`
@@ -43,28 +51,28 @@ func (s sqlStore) init() error {
 // Query запросить список удовлетворяющий условиям поиска
 // query - строка поиска
 // serviceType - тип услуги
-func (s sqlStore) Query(query string) ([]string, error) {
+func (s sqlStore) Query(query string) ([]data.City, error) {
 	if query == "" {
-		return []string{}, nil
+		return []data.City{}, nil
 	}
-	stmt, err := s.db.Prepare("select name from city where lower(name) like ? limit 10")
+	stmt, err := s.db.Prepare("select name, code, country_name, country_code, total_score, arrival_score, departure_score, transit_score from city where lower(name) like ? ORDER BY total_score DESC limit 10")
 	if err != nil {
-		return []string{}, err
+		return []data.City{}, err
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query("%" + strings.ToLower(query) + "%")
 	if err != nil {
-		return []string{}, err
+		return []data.City{}, err
 	}
 	defer rows.Close()
-	items := []string{}
+	items := []data.City{}
 	for rows.Next() {
-		var name string
-		err = rows.Scan(&name)
+		var item data.City
+		err = rows.Scan(&item.Name, &item.Code, &item.CountryName, &item.CountryCode, &item.TotalScore, &item.ArrivalScore, &item.DepartureScore, &item.TransitScore)
 		if err != nil {
-			return []string{}, nil
+			return []data.City{}, nil
 		}
-		items = append(items, name)
+		items = append(items, item)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -74,7 +82,7 @@ func (s sqlStore) Query(query string) ([]string, error) {
 }
 
 // Populate очистить базу данных и заполнить ее заново переданными значениями
-func (s sqlStore) Populate(items []string) error {
+func (s sqlStore) Populate(items []data.City) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
@@ -85,14 +93,36 @@ func (s sqlStore) Populate(items []string) error {
 		return err
 	}
 
-	stmt, err := tx.Prepare("insert into city(name) values(?)")
+	sqlStmt := `
+	insert into city(
+		name,
+		code,
+		country_name,
+		country_code,
+		total_score,
+		arrival_score,
+		departure_score,
+		transit_score
+	)
+	values(?, ?, ?, ?, ?, ?, ?, ?)
+	`
+	stmt, err := tx.Prepare(sqlStmt)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 	defer stmt.Close()
 	for _, item := range items {
-		_, err = stmt.Exec(item)
+		_, err = stmt.Exec(
+			item.Name,
+			item.Code,
+			item.CountryName,
+			item.CountryCode,
+			item.TotalScore,
+			item.ArrivalScore,
+			item.DepartureScore,
+			item.TransitScore,
+		)
 		if err != nil {
 			tx.Rollback()
 			return err

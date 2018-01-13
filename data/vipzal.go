@@ -29,35 +29,16 @@ func fetchJSON(url string, target interface{}) error {
 	return nil
 }
 
-// City структура для отображения данных города
-type city struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Code         string `json:"code"`
-	CountryName  string `json:"country_name"`
-	Autocomplete string `json:"autocomplete"`
-}
-
-// Response ответ сервера
-type response []city
-
 // Получение списка городов
-func (c client) GetCities() ([]string, error) {
-	target := new(response)
+func (c client) GetCities() ([]City, error) {
+	target := new([]City)
 
 	c.logger.Log("event", "Fetching cities", "baseUrl", c.baseURL)
-	err := fetchJSON(c.baseURL+"/white-label/city", target)
+	err := fetchJSON(c.baseURL+"/white-label/city/scored", target)
 
 	if err != nil {
-		return []string{}, err
+		return []City{}, err
 	}
 
-	items := []string{}
-
-	for _, city := range *target {
-		items = append(items, city.Name)
-	}
-
-	c.logger.Log("event", "Cities fetched")
-	return items, nil
+	return *target, nil
 }

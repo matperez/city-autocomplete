@@ -87,8 +87,8 @@ type queryRequest struct {
 
 // структура для кодирования ответа
 type queryResponse struct {
-	V   []string `json:"v"`
-	Err string   `json:"err,omitempty"`
+	V   []data.City `json:"v"`
+	Err string      `json:"err,omitempty"`
 }
 
 // функция для парсинга запроса

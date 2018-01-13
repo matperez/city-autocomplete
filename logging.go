@@ -3,6 +3,8 @@ package main
 import (
 	"time"
 
+	"github.com/matperez/city-autocomplete/data"
+
 	"github.com/go-kit/kit/log"
 )
 
@@ -13,7 +15,7 @@ type loggingMiddleware struct {
 }
 
 // декоратор для логирования данных запроса
-func (mw loggingMiddleware) Query(query string, serviceType string) (output []string, err error) {
+func (mw loggingMiddleware) Query(query string, serviceType string) (output []data.City, err error) {
 	defer func(begin time.Time) {
 		_ = mw.logger.Log(
 			"method", "query",
