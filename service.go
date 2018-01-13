@@ -16,7 +16,7 @@ type service struct {
 }
 
 // New фабричный метод
-func New(store persistence.Store) Service {
+func NewService(store persistence.Store) Service {
 	return &service{store}
 }
 

@@ -34,6 +34,24 @@ func init() {
 	setupLogger()
 }
 
+// наполнение базы данными с випзала
+func populateDatabase(store persistence.Store) error {
+	log.Warn("Populating the database")
+
+	vipzal := data.NewVipzalSource(baseURL)
+	cities, err := vipzal.GetCities()
+	if err != nil {
+		return err
+	}
+
+	if err = store.Populate(cities); err != nil {
+		return err
+	}
+
+	log.Warn("Database populated")
+	return nil
+}
+
 func main() {
 	db, err := sql.Open("sqlite3", "file::memory:?mode=memory&cache=shared")
 	if err != nil {
@@ -46,22 +64,12 @@ func main() {
 		log.Panic(err.Error())
 	}
 
-	log.Warn("Populating the database")
-
-	vipzal := data.NewVipzalSource(baseURL)
-	cities, err := vipzal.GetCities()
-	if err != nil {
+	if err = populateDatabase(store); err != nil {
 		log.Panic(err.Error())
 	}
-
-	if err = store.Populate(cities); err != nil {
-		log.Panic(err.Error())
-	}
-
-	log.Warn("Database populated")
 
 	var svc Service
-	svc = New(store)
+	svc = NewService(store)
 	svc = loggingMiddleware{svc}
 
 	http.Handle(
@@ -69,9 +77,23 @@ func main() {
 		httptransport.NewServer(
 			makeQueryEndpoint(svc),
 			decodeQueryRequest,
-			encodeResponse,
+			responseJSON,
 		),
 	)
+
+	http.Handle("/update", httptransport.NewServer(
+		func(ctx context.Context, request interface{}) (interface{}, error) {
+			log.Warn("Database repopulation requested")
+			if err := populateDatabase(store); err != nil {
+				return "failed", err
+			}
+			return "ok", nil
+		},
+		func(_ context.Context, r *http.Request) (interface{}, error) {
+			return nil, nil
+		},
+		responseString,
+	))
 
 	log.WithFields(log.Fields{
 		"addr": ":8080",
@@ -124,9 +146,15 @@ func decodeQueryRequest(_ context.Context, r *http.Request) (interface{}, error)
 	return queryRequest{query, serviceType}, nil
 }
 
-// функция для кодирования ответа
-func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+// функция для кодирования ответа в JSON
+func responseJSON(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	return json.NewEncoder(w).Encode(response)
+}
+
+// функция для кодирования ответа в текст
+func responseString(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	fmt.Fprint(w, response)
+	return nil
 }
 
 // обработчик запроса на получение списка городов
