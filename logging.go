@@ -4,26 +4,24 @@ import (
 	"time"
 
 	"github.com/matperez/city-autocomplete/data"
-
-	"github.com/go-kit/kit/log"
+	log "github.com/sirupsen/logrus"
 )
 
 // структура декоратора
 type loggingMiddleware struct {
-	logger log.Logger
-	next   Service
+	next Service
 }
 
 // декоратор для логирования данных запроса
 func (mw loggingMiddleware) Query(query string, serviceType string) (output []data.City, err error) {
 	defer func(begin time.Time) {
-		_ = mw.logger.Log(
-			"method", "query",
-			"input", map[string]string{"query": query, "type": serviceType},
-			"output", output,
-			"err", err,
-			"took", time.Since(begin),
-		)
+		log.WithFields(log.Fields{
+			"method": "query",
+			"input":  map[string]string{"query": query, "type": serviceType},
+			"output": output,
+			"err":    err,
+			"took":   time.Since(begin),
+		}).Info("Fetching cities")
 	}(time.Now())
 
 	output, err = mw.next.Query(query, serviceType)

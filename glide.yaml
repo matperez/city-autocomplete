@@ -1,8 +1,13 @@
 package: github.com/matperez/city-autocomplete
 import:
+- package: github.com/essentialkaos/translit
+  version: ^2.0.0
 - package: github.com/go-kit/kit
   version: ^0.6.0
   subpackages:
   - endpoint
-  - log
   - transport/http
+- package: github.com/mattn/go-sqlite3
+  version: ^1.6.0
+- package: github.com/sirupsen/logrus
+  version: ^1.0.4

@@ -6,19 +6,17 @@ import (
 
 	"github.com/essentialkaos/translit"
 
-	"github.com/go-kit/kit/log"
 	"github.com/matperez/city-autocomplete/data"
 )
 
 // реализация интерфейса через SQLite
 type sqlStore struct {
-	db     *sql.DB
-	logger log.Logger
+	db *sql.DB
 }
 
 // NewSQLStore фабрика нового хранилища
-func NewSQLStore(db *sql.DB, logger log.Logger) (Store, error) {
-	store := &sqlStore{db, logger}
+func NewSQLStore(db *sql.DB) (Store, error) {
+	store := &sqlStore{db}
 	if err := store.init(); err != nil {
 		return store, err
 	}
@@ -27,7 +25,6 @@ func NewSQLStore(db *sql.DB, logger log.Logger) (Store, error) {
 
 // Init инициализация хранилища
 func (s sqlStore) init() error {
-	s.logger.Log("event", "Initializing the database")
 	sqlStmt := `
 	create table city (
 		name text,
@@ -44,10 +41,8 @@ func (s sqlStore) init() error {
 	`
 	_, err := s.db.Exec(sqlStmt)
 	if err != nil {
-		s.logger.Log("err", "Initialization failed")
 		return err
 	}
-	s.logger.Log("event", "Database initialized")
 	return nil
 }
 

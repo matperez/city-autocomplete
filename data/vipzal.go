@@ -5,17 +5,16 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-kit/kit/log"
+	log "github.com/sirupsen/logrus"
 )
 
 type client struct {
 	baseURL string
-	logger  log.Logger
 }
 
 // NewVipzalSource фабричный метод
-func NewVipzalSource(baseURL string, logger log.Logger) Source {
-	return &client{baseURL, logger}
+func NewVipzalSource(baseURL string) Source {
+	return &client{baseURL}
 }
 
 func fetchJSON(url string, target interface{}) error {
@@ -33,7 +32,10 @@ func fetchJSON(url string, target interface{}) error {
 func (c client) GetCities() ([]City, error) {
 	target := new([]City)
 
-	c.logger.Log("event", "Fetching cities", "baseUrl", c.baseURL)
+	log.WithFields(log.Fields{
+		"baseUrl": c.baseURL,
+	}).Warn("Fetching cities")
+
 	err := fetchJSON(c.baseURL+"/white-label/city/scored", target)
 
 	if err != nil {

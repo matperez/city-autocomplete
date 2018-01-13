@@ -1,6 +1,8 @@
-hash: 34cb91d885896158405209dca6641631c427f042ba65f2d39e5077f0f9868d44
-updated: 2018-01-12T16:56:25.037995517+05:00
+hash: 6d753bc9ddf53c13a4b3a5063a1d18103db16ee83fce0bf000933194ea618f3f
+updated: 2018-01-14T01:20:07.889197604+05:00
 imports:
+- name: github.com/essentialkaos/translit
+  version: f5c7ae2e7f438a7f5e5f47811c2b7382f91927e4
 - name: github.com/go-kit/kit
   version: 4dc7be5d2d12881735283bcab7352178e190fc71
   subpackages:
@@ -15,4 +17,15 @@ imports:
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/mattn/go-sqlite3
   version: 6c771bb9887719704b210e87e934f08be014bdb1
+- name: github.com/sirupsen/logrus
+  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
+- name: golang.org/x/crypto
+  version: 13931e22f9e72ea58bb73048bc752b48c6d4d4ac
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/sys
+  version: 810d7000345868fc619eb81f46307107118f4ae1
+  subpackages:
+  - unix
+  - windows
 testImports: []

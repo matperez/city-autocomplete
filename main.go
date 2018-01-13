@@ -11,60 +11,58 @@ import (
 
 	"github.com/matperez/city-autocomplete/data"
 	"github.com/matperez/city-autocomplete/persistence"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
-	baseURL string
+	baseURL  string
+	logLevel string
 )
 
 func init() {
+	flag.StringVar(&logLevel, "logLevel", "info", "Log level: warning, info, error, fatal")
 	flag.Parse()
 	if flag.NArg() == 0 {
-		fmt.Printf("Usage: %s [OPTIONS] <base-url>\n", os.Args[0])
-		fmt.Println("Options available:")
-		flag.PrintDefaults()
+		printUsage()
 		os.Exit(1)
 	}
 	baseURL = flag.Arg(0)
+	setupLogger()
 }
 
 func main() {
-	logger := log.NewJSONLogger(os.Stderr)
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
-
 	db, err := sql.Open("sqlite3", "file::memory:?mode=memory&cache=shared")
 	if err != nil {
-		panic(err.Error())
+		log.Panic(err.Error())
 	}
 	defer db.Close()
 
-	store, err := persistence.NewSQLStore(db, logger)
+	store, err := persistence.NewSQLStore(db)
 	if err != nil {
-		panic(err.Error())
+		log.Panic(err.Error())
 	}
 
-	logger.Log("event", "Populating the database")
+	log.Warn("Populating the database")
 
-	vipzal := data.NewVipzalSource(baseURL, logger)
+	vipzal := data.NewVipzalSource(baseURL)
 	cities, err := vipzal.GetCities()
 	if err != nil {
-		panic(err.Error())
+		log.Panic(err.Error())
 	}
 
 	if err = store.Populate(cities); err != nil {
-		panic(err.Error())
+		log.Panic(err.Error())
 	}
 
-	logger.Log("event", "Database populated")
+	log.Warn("Database populated")
 
 	var svc Service
 	svc = New(store)
-	svc = loggingMiddleware{logger, svc}
+	svc = loggingMiddleware{svc}
 
 	http.Handle(
 		"/query",
@@ -75,8 +73,35 @@ func main() {
 		),
 	)
 
-	logger.Log("event", "Listening", "proto", "HTTP", "addr", ":8080")
-	logger.Log("err", http.ListenAndServe(":8080", nil))
+	log.WithFields(log.Fields{
+		"addr": ":8080",
+	}).Warn("Listening")
+
+	log.Error(http.ListenAndServe(":8080", nil))
+}
+
+// Настройка логирования
+func setupLogger() {
+	// Only log the warning severity or above.
+	// Log as JSON instead of the default ASCII formatter.
+	log.SetFormatter(&log.JSONFormatter{})
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+	level, err := log.ParseLevel(logLevel)
+	if err != nil {
+		fmt.Println(err.Error())
+		printUsage()
+		os.Exit(1)
+	}
+	log.SetLevel(level)
+}
+
+// отображение справки по параметрам запуска
+func printUsage() {
+	fmt.Printf("Usage: %s [OPTIONS] <base-url>\n", os.Args[0])
+	fmt.Println("Options available:")
+	flag.PrintDefaults()
 }
 
 // структура для парсинга запроса
