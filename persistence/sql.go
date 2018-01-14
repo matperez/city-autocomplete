@@ -27,10 +27,10 @@ func NewSQLStore(db *sql.DB) (Store, error) {
 func (s sqlStore) init() error {
 	sqlStmt := `
 	create table city (
-		name text,
-		code text,
-		country_name text,
-		country_code text,
+		name string,
+		code string,
+		country_name string,
+		country_code string,
 		total_score integer,
 		arrival_score integer,
 		departure_score integer,
@@ -54,7 +54,19 @@ func (s sqlStore) Query(query string) ([]data.City, error) {
 	if query == "" {
 		return items, nil
 	}
-	stmt, err := s.db.Prepare("select name, code, country_name, country_code, total_score, arrival_score, departure_score, transit_score from city where autocomplete like ? ORDER BY total_score DESC limit 10")
+	sqlQuery := `
+	select 
+		name, 
+		code, 
+		country_name, 
+		country_code, 
+		total_score, 
+		arrival_score, 
+		departure_score, 
+		transit_score 
+	from city where autocomplete like ? ORDER BY total_score DESC limit 10
+	`
+	stmt, err := s.db.Prepare(sqlQuery)
 	if err != nil {
 		return items, err
 	}
